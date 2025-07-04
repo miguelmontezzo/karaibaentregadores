@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -202,68 +201,84 @@ const Dashboard = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
+    const currentDate = new Date().toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
     printWindow.document.write(`
       <!DOCTYPE html>
-      <html>
+      <html lang="pt-BR">
         <head>
-          <title>Pedido ${order.codigo_pedido}</title>
+          <meta charset="UTF-8">
+          <title>Cupom Fiscal - ${order.codigo_pedido}</title>
           <style>
-            body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 10px; }
-            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-            .section { margin-bottom: 10px; }
-            .label { font-weight: bold; }
-            .line { border-bottom: 1px dashed #ccc; margin: 5px 0; }
-            @media print { body { margin: 0; } }
+            body {
+              font-family: "Courier New", monospace;
+              margin: 0;
+              padding: 0;
+            }
+            .cupom {
+              width: 58mm;
+              margin: 20px auto;
+              padding: 10px;
+              border: 1px dashed #000;
+              font-size: 12px;
+              line-height: 1.3;
+            }
+            .center { text-align: center; }
+            .bold { font-weight: bold; }
+            .divider {
+              border-top: 1px dashed #000;
+              margin: 5px 0;
+            }
+            .item {
+              display: flex;
+              justify-content: space-between;
+              margin: 2px 0;
+            }
+            .field {
+              margin: 2px 0;
+            }
+            @media print { 
+              body { margin: 0; }
+              .cupom { margin: 0; border: none; }
+            }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h2>KARAÍBA RESTAURANTE</h2>
-            <p>Pedido: ${order.codigo_pedido || "N/A"}</p>
-          </div>
-          
-          <div class="section">
-            <div class="label">Cliente:</div>
-            <div>${order.nome_cliente || "N/A"}</div>
-          </div>
-          
-          <div class="section">
-            <div class="label">Telefone:</div>
-            <div>${order.telefone || "N/A"}</div>
-          </div>
-          
-          <div class="section">
-            <div class="label">Endereço:</div>
-            <div>${order.endereco_completo || "N/A"}</div>
-          </div>
-          
-          <div class="line"></div>
-          
-          <div class="section">
-            <div class="label">Itens do Pedido:</div>
-            <div>${order.itens || "N/A"}</div>
-          </div>
-          
-          <div class="line"></div>
-          
-          <div class="section">
-            <div class="label">Valor Total:</div>
-            <div>${order.valor_total || "N/A"}</div>
-          </div>
-          
-          <div class="section">
-            <div class="label">Forma de Pagamento:</div>
-            <div>${order.forma_pagamento || "N/A"}</div>
-          </div>
-          
-          <div class="section">
-            <div class="label">Tempo Estimado:</div>
-            <div>${order.tempo_entrega_estimado || "N/A"}</div>
-          </div>
-          
-          <div class="section">
-            <div class="label">Status:</div>
-            <div>${order.status || "N/A"}</div>
+          <div class="cupom">
+            <div class="center bold">KARAÍBA RESTAURANTE</div>
+            <div class="center">CNPJ: 00.000.000/0001-00</div>
+            <div class="divider"></div>
+            
+            <div class="field"><span class="bold">Pedido:</span> ${order.codigo_pedido || "N/A"}</div>
+            <div class="field"><span class="bold">Data:</span> ${currentDate}</div>
+            <div class="field"><span class="bold">Cliente:</span> ${order.nome_cliente || "N/A"}</div>
+            <div class="field"><span class="bold">Telefone:</span> ${order.telefone || "N/A"}</div>
+            <div class="field"><span class="bold">Endereço:</span> ${order.endereco_completo || "N/A"}</div>
+            <div class="field"><span class="bold">Bairro:</span> ${order.bairro || "N/A"}</div>
+            <div class="divider"></div>
+            
+            <div class="bold">ITENS:</div>
+            <div style="margin: 5px 0; font-size: 11px;">
+              ${order.itens || "Itens não informados"}
+            </div>
+            
+            <div class="divider"></div>
+            <div class="item bold"><span>TOTAL</span><span>R$ ${order.valor_total || "0,00"}</span></div>
+            <div class="divider"></div>
+            
+            <div class="field"><span class="bold">Pagamento:</span> ${order.forma_pagamento || "N/A"}</div>
+            <div class="field"><span class="bold">Tempo de entrega:</span> ${order.tempo_entrega_estimado || "N/A"}</div>
+            <div class="field"><span class="bold">Status:</span> ${order.status || "N/A"}</div>
+            <div class="divider"></div>
+            
+            <div class="center">Agradecemos pela preferência!</div>
+            <div class="center">Karaíba Restaurante</div>
           </div>
         </body>
       </html>
@@ -277,7 +292,20 @@ const Dashboard = () => {
 
   const getPendingOrders = () => orders.filter(order => order.status === "Pendente");
   const getConfirmedOrders = () => orders.filter(order => order.status === "Confirmado");
-  const getDeliveryOrders = () => orders.filter(order => order.status === "Saiu para entrega");
+  
+  const getDeliveryOrders = () => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    return orders.filter(order => {
+      if (order.status !== "Saiu para entrega") return false;
+      
+      const orderDate = new Date(order.data_hora_pedido);
+      const orderDateStr = orderDate.toISOString().split('T')[0];
+      
+      return orderDateStr === todayStr;
+    });
+  };
 
   if (loading) {
     return (
@@ -314,7 +342,7 @@ const Dashboard = () => {
             variant="outline" 
             size="sm" 
             onClick={handleLogout}
-            className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 text-xs py-1 h-7"
+            className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary text-xs py-1 h-7"
           >
             <LogOut className="w-3 h-3 mr-1" />
             Sair
@@ -377,7 +405,7 @@ const Dashboard = () => {
           <div className="bg-card rounded-lg shadow-sm border">
             <div className="bg-status-delivery text-status-delivery-foreground p-3 rounded-t-lg">
               <h2 className="font-semibold text-sm">
-                Saiu para entrega ({getDeliveryOrders().length})
+                Saiu para entrega - Hoje ({getDeliveryOrders().length})
               </h2>
             </div>
             <div className="p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
@@ -391,7 +419,7 @@ const Dashboard = () => {
               ))}
               {getDeliveryOrders().length === 0 && (
                 <p className="text-center text-muted-foreground py-8 text-sm">
-                  Nenhum pedido em entrega
+                  Nenhum pedido em entrega hoje
                 </p>
               )}
             </div>
