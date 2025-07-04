@@ -1,9 +1,10 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Printer } from "lucide-react";
+import { LogOut } from "lucide-react";
 import OrderCard from "@/components/OrderCard";
 import karaibaWhiteLogo from "@/assets/karaiba-logo-white.png";
 
@@ -13,6 +14,7 @@ interface Order {
   nome_cliente: string | null;
   telefone: string | null;
   endereco_completo: string | null;
+  bairro: string | null;
   itens: string | null;
   valor_total: string | null;
   forma_pagamento: string | null;
@@ -163,14 +165,22 @@ const Dashboard = () => {
 
       if (webhookUrl) {
         const order = orders.find(o => o.id === orderId);
-        try {
-          await fetch(webhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(order),
-          });
-        } catch (webhookError) {
-          console.error("Erro no webhook:", webhookError);
+        if (order) {
+          try {
+            const webhookData = {
+              nome_cliente: order.nome_cliente,
+              telefone: order.telefone,
+              codigo_pedido: order.codigo_pedido
+            };
+            
+            await fetch(webhookUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(webhookData),
+            });
+          } catch (webhookError) {
+            console.error("Erro no webhook:", webhookError);
+          }
         }
       }
 
@@ -289,13 +299,13 @@ const Dashboard = () => {
             <img 
               src={karaibaWhiteLogo} 
               alt="Karaíba" 
-              className="h-10 w-auto"
+              className="h-8 w-auto"
             />
             <div>
-              <h1 className="text-xl font-bold text-primary-foreground">
+              <h1 className="text-lg font-bold text-primary-foreground">
                 Painel de Pedidos
               </h1>
-              <p className="text-sm text-primary-foreground/80">
+              <p className="text-xs text-primary-foreground/80">
                 Bem-vindo, {user?.usuario}
               </p>
             </div>
@@ -304,25 +314,25 @@ const Dashboard = () => {
             variant="outline" 
             size="sm" 
             onClick={handleLogout}
-            className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
+            className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 text-xs py-1 h-7"
           >
-            <LogOut className="w-4 h-4 mr-2" />
+            <LogOut className="w-3 h-3 mr-1" />
             Sair
           </Button>
         </div>
       </header>
 
       {/* Kanban Board */}
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <main className="container mx-auto px-2 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Coluna Pendente */}
           <div className="bg-card rounded-lg shadow-sm border">
-            <div className="bg-status-pending text-status-pending-foreground p-4 rounded-t-lg">
-              <h2 className="font-semibold text-lg">
+            <div className="bg-status-pending text-status-pending-foreground p-3 rounded-t-lg">
+              <h2 className="font-semibold text-sm">
                 Pendente ({getPendingOrders().length})
               </h2>
             </div>
-            <div className="p-4 space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
+            <div className="p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
               {getPendingOrders().map((order) => (
                 <OrderCard
                   key={order.id}
@@ -332,7 +342,7 @@ const Dashboard = () => {
                 />
               ))}
               {getPendingOrders().length === 0 && (
-                <p className="text-center text-muted-foreground py-8">
+                <p className="text-center text-muted-foreground py-8 text-sm">
                   Nenhum pedido pendente
                 </p>
               )}
@@ -341,12 +351,12 @@ const Dashboard = () => {
 
           {/* Coluna Confirmado */}
           <div className="bg-card rounded-lg shadow-sm border">
-            <div className="bg-status-confirmed text-status-confirmed-foreground p-4 rounded-t-lg">
-              <h2 className="font-semibold text-lg">
+            <div className="bg-status-confirmed text-status-confirmed-foreground p-3 rounded-t-lg">
+              <h2 className="font-semibold text-sm">
                 Confirmado ({getConfirmedOrders().length})
               </h2>
             </div>
-            <div className="p-4 space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
+            <div className="p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
               {getConfirmedOrders().map((order) => (
                 <OrderCard
                   key={order.id}
@@ -356,7 +366,7 @@ const Dashboard = () => {
                 />
               ))}
               {getConfirmedOrders().length === 0 && (
-                <p className="text-center text-muted-foreground py-8">
+                <p className="text-center text-muted-foreground py-8 text-sm">
                   Nenhum pedido confirmado
                 </p>
               )}
@@ -365,12 +375,12 @@ const Dashboard = () => {
 
           {/* Coluna Saiu para entrega */}
           <div className="bg-card rounded-lg shadow-sm border">
-            <div className="bg-status-delivery text-status-delivery-foreground p-4 rounded-t-lg">
-              <h2 className="font-semibold text-lg">
+            <div className="bg-status-delivery text-status-delivery-foreground p-3 rounded-t-lg">
+              <h2 className="font-semibold text-sm">
                 Saiu para entrega ({getDeliveryOrders().length})
               </h2>
             </div>
-            <div className="p-4 space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
+            <div className="p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
               {getDeliveryOrders().map((order) => (
                 <OrderCard
                   key={order.id}
@@ -380,7 +390,7 @@ const Dashboard = () => {
                 />
               ))}
               {getDeliveryOrders().length === 0 && (
-                <p className="text-center text-muted-foreground py-8">
+                <p className="text-center text-muted-foreground py-8 text-sm">
                   Nenhum pedido em entrega
                 </p>
               )}
