@@ -61,6 +61,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				status: {
+					pending: 'hsl(var(--status-pending))',
+					'pending-foreground': 'hsl(var(--status-pending-foreground))',
+					confirmed: 'hsl(var(--status-confirmed))',
+					'confirmed-foreground': 'hsl(var(--status-confirmed-foreground))',
+					delivery: 'hsl(var(--status-delivery))',
+					'delivery-foreground': 'hsl(var(--status-delivery-foreground))'
 				}
 			},
 			borderRadius: {
