@@ -283,7 +283,7 @@ const Dashboard = () => {
   }
   return <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-primary shadow-md">
+      <header className="shadow-md bg-red-700">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between bg-red-700">
           <div className="flex items-center space-x-4">
             <img src={karaibaWhiteLogo} alt="Karaíba" className="h-8 w-auto" />
