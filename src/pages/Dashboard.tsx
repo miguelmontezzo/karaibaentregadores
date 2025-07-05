@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -235,20 +236,20 @@ const Dashboard = () => {
       return total.toFixed(2).replace(".", ",");
     };
 
-    // Formatar itens - cada item em uma linha
+    // Formatar itens - cada item em uma linha separada
     const formatItens = (itens: string | null) => {
       if (!itens) return "Itens não informados";
       
       // Separar itens por vírgula, ponto e vírgula ou quebra de linha
       const itemsList = itens.split(/[,;]|\n/).map(item => item.trim()).filter(item => item.length > 0);
       
-      // Se não conseguiu separar, retorna como está
+      // Se não conseguiu separar, retorna como está mas com quebra de linha
       if (itemsList.length <= 1) {
-        return itens;
+        return `• ${itens}`;
       }
       
-      // Retorna cada item em uma linha
-      return itemsList.map(item => `• ${item}`).join('<br>');
+      // Retorna cada item em uma linha separada
+      return itemsList.map(item => `• ${item}`).join('\n');
     };
 
     // Gerar HTML para 2 cópias do cupom
@@ -271,8 +272,8 @@ const Dashboard = () => {
         <div class="divider"></div>
         
         <div class="bold">ITENS:</div>
-        <div style="margin: 5px 0; font-size: 15px; font-weight: bold; line-height: 1.4;">
-          ${formatItens(order.itens)}
+        <div class="itens-container">
+          ${formatItens(order.itens).split('\n').map(item => `<div class="item-line">${item}</div>`).join('')}
         </div>
         
         <div class="divider"></div>
@@ -341,6 +342,17 @@ const Dashboard = () => {
               margin: 2px 0;
             }
             
+            .itens-container {
+              margin: 5px 0;
+              font-size: 13px;
+              font-weight: bold;
+            }
+            
+            .item-line {
+              margin: 3px 0;
+              line-height: 1.3;
+            }
+            
             @media print { 
               @page {
                 margin: 0 !important;
@@ -359,6 +371,16 @@ const Dashboard = () => {
                 border: none !important;
                 page-break-inside: avoid !important;
                 font-weight: bold !important;
+              }
+              
+              .itens-container {
+                font-size: 13px !important;
+                font-weight: bold !important;
+              }
+              
+              .item-line {
+                margin: 3px 0 !important;
+                line-height: 1.3 !important;
               }
               
               html, body {
