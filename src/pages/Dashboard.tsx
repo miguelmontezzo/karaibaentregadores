@@ -262,8 +262,12 @@ const Dashboard = () => {
         </head>
         <body>
           <div class="cupom">
-            <div class="center bold">KARAÍBA RESTAURANTE</div>
-            <div class="center">CNPJ: 00.000.000/0001-00</div>
+            <div class="center bold">RESTAURANTE E LANCHONETE KARAÍBA</div>
+            <div class="center">Souza & Belmiro LTDA</div>
+            <div class="center">CNPJ: 08.892.783/0001-77</div>
+            <div class="center">Rua Rafael Marino Neto, 266</div>
+            <div class="center">Jardim Indaia, Uberlândia - MG</div>
+            <div class="center">CEP: 38411-186</div>
             <div class="divider"></div>
             
             <div class="field"><span class="bold">Pedido:</span> ${order.codigo_pedido || "N/A"}</div>
@@ -289,7 +293,7 @@ const Dashboard = () => {
             <div class="divider"></div>
             
             <div class="center">Agradecemos pela preferência!</div>
-            <div class="center">Karaíba Restaurante</div>
+            <div class="center">Restaurante e Lanchonete Karaíba</div>
           </div>
         </body>
       </html>
