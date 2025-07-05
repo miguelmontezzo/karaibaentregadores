@@ -205,9 +205,10 @@ const Dashboard = () => {
             }
             
             body {
-              font-family: "Courier New", monospace;
+              font-family: Arial, sans-serif;
               margin: 0;
               padding: 0;
+              font-weight: bold;
             }
             
             .cupom {
@@ -215,8 +216,9 @@ const Dashboard = () => {
               margin: 20px auto;
               padding: 10px;
               border: 1px dashed #000;
-              font-size: 12px;
-              line-height: 1.3;
+              font-size: 14px;
+              line-height: 1.4;
+              font-weight: bold;
             }
             
             .center { text-align: center; }
@@ -244,12 +246,14 @@ const Dashboard = () => {
                 margin: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 color-adjust: exact !important;
+                font-weight: bold !important;
               }
               
               .cupom { 
                 margin: 0 !important; 
                 border: none !important;
                 page-break-inside: avoid !important;
+                font-weight: bold !important;
               }
               
               /* Remove browser headers and footers */
@@ -279,7 +283,7 @@ const Dashboard = () => {
             <div class="divider"></div>
             
             <div class="bold">ITENS:</div>
-            <div style="margin: 5px 0; font-size: 11px;">
+            <div style="margin: 5px 0; font-size: 13px; font-weight: bold;">
               ${order.itens || "Itens não informados"}
             </div>
             
