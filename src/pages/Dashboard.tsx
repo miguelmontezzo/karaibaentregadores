@@ -1,10 +1,9 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut } from "lucide-react";
+import { LogOut, RefreshCw } from "lucide-react";
 import OrderCard from "@/components/OrderCard";
 import karaibaWhiteLogo from "@/assets/karaiba-logo-white.png";
 
@@ -30,6 +29,7 @@ const Dashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,6 +43,15 @@ const Dashboard = () => {
     setUser(JSON.parse(savedUser));
     fetchOrders();
     setupRealtimeUpdates();
+
+    // Configurar atualização automática a cada 30 segundos
+    const intervalId = setInterval(() => {
+      fetchOrders();
+    }, 30000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [navigate]);
 
   const fetchOrders = async () => {
@@ -69,6 +78,16 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchOrders();
+    setIsRefreshing(false);
+    toast({
+      title: "Página atualizada!",
+      description: "Dados recarregados com sucesso"
+    });
   };
 
   const setupRealtimeUpdates = () => {
@@ -447,15 +466,27 @@ const Dashboard = () => {
               </p>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleLogout} 
-            className="border-primary-foreground/20 text-xs py-1 h-7 bg-white/[0.98] text-red-900"
-          >
-            <LogOut className="w-3 h-3 mr-1" />
-            Sair
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="border-primary-foreground/20 text-xs py-1 h-7 bg-white/[0.98] text-red-900"
+            >
+              <RefreshCw className={`w-3 h-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogout} 
+              className="border-primary-foreground/20 text-xs py-1 h-7 bg-white/[0.98] text-red-900"
+            >
+              <LogOut className="w-3 h-3 mr-1" />
+              Sair
+            </Button>
+          </div>
         </div>
       </header>
 
