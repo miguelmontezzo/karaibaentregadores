@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LogOut } from "lucide-react";
 import OrderCard from "@/components/OrderCard";
 import karaibaWhiteLogo from "@/assets/karaiba-logo-white.png";
+
 interface Order {
   id: string;
   codigo_pedido: string | null;
@@ -21,6 +22,7 @@ interface Order {
   data_hora_pedido: string;
   criado_em: string | null;
 }
+
 const Dashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,7 @@ const Dashboard = () => {
   const {
     toast
   } = useToast();
+
   useEffect(() => {
     // Verificar se usuário está logado
     const savedUser = localStorage.getItem("karaiba_user");
@@ -40,6 +43,7 @@ const Dashboard = () => {
     fetchOrders();
     setupRealtimeUpdates();
   }, [navigate]);
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -65,6 +69,7 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
   const setupRealtimeUpdates = () => {
     const channel = supabase.channel("orders-changes").on("postgres_changes", {
       event: "*",
@@ -94,6 +99,7 @@ const Dashboard = () => {
       supabase.removeChannel(channel);
     };
   };
+
   const playNotificationSound = () => {
     try {
       // Criar um áudio de notificação simples usando AudioContext
@@ -114,6 +120,7 @@ const Dashboard = () => {
       console.error("Erro ao reproduzir som:", error);
     }
   };
+
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const {
@@ -167,20 +174,24 @@ const Dashboard = () => {
       console.error("Erro:", error);
     }
   };
+
   const handleLogout = () => {
     localStorage.removeItem("karaiba_user");
     navigate("/login");
   };
+
   const printOrder = (order: Order) => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+    
     const currentDate = new Date().toLocaleString("pt-BR", {
       day: "2-digit",
-      month: "2-digit",
+      month: "2-digit", 
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit"
     });
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -188,11 +199,17 @@ const Dashboard = () => {
           <meta charset="UTF-8">
           <title>Cupom Fiscal - ${order.codigo_pedido}</title>
           <style>
+            @page {
+              margin: 0;
+              size: auto;
+            }
+            
             body {
               font-family: "Courier New", monospace;
               margin: 0;
               padding: 0;
             }
+            
             .cupom {
               width: 58mm;
               margin: 20px auto;
@@ -201,6 +218,7 @@ const Dashboard = () => {
               font-size: 12px;
               line-height: 1.3;
             }
+            
             .center { text-align: center; }
             .bold { font-weight: bold; }
             .divider {
@@ -215,9 +233,30 @@ const Dashboard = () => {
             .field {
               margin: 2px 0;
             }
+            
             @media print { 
-              body { margin: 0; }
-              .cupom { margin: 0; border: none; }
+              @page {
+                margin: 0 !important;
+                size: auto !important;
+              }
+              
+              body { 
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+              }
+              
+              .cupom { 
+                margin: 0 !important; 
+                border: none !important;
+                page-break-inside: avoid !important;
+              }
+              
+              /* Remove browser headers and footers */
+              html, body {
+                height: auto !important;
+                overflow: visible !important;
+              }
             }
           </style>
         </head>
@@ -255,11 +294,17 @@ const Dashboard = () => {
         </body>
       </html>
     `);
+    
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    
+    // Add a small delay to ensure styles are loaded before printing
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
   };
+
   const getPendingOrders = () => orders.filter(order => order.status === "Pendente");
   const getConfirmedOrders = () => orders.filter(order => order.status === "Confirmado");
   const getDeliveryOrders = () => {
@@ -273,6 +318,7 @@ const Dashboard = () => {
       return orderDateStr === todayStr;
     });
   };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -281,6 +327,7 @@ const Dashboard = () => {
         </div>
       </div>;
   }
+
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="shadow-md bg-red-700">
@@ -354,4 +401,5 @@ const Dashboard = () => {
       </main>
     </div>;
 };
+
 export default Dashboard;
