@@ -16,6 +16,8 @@ interface Order {
   bairro: string | null;
   itens: string | null;
   valor_total: string | null;
+  valor_pedido: string | null;
+  taxa_entrega: string | null;
   forma_pagamento: string | null;
   tempo_entrega_estimado: string | null;
   status: string | null;
@@ -192,6 +194,64 @@ const Dashboard = () => {
       minute: "2-digit"
     });
 
+    const formatCurrency = (value: string | null) => {
+      if (!value) return "0,00";
+      return value.replace(".", ",");
+    };
+
+    const calculateTotal = () => {
+      const valorPedido = parseFloat(order.valor_pedido?.replace(",", ".") || "0");
+      const taxaEntrega = parseFloat(order.taxa_entrega?.replace(",", ".") || "0");
+      const total = valorPedido + taxaEntrega;
+      return total.toFixed(2).replace(".", ",");
+    };
+
+    // Gerar HTML para 2 cópias do cupom
+    const generateCupomHTML = (copyNumber: number) => `
+      <div class="cupom">
+        <div class="center bold">RESTAURANTE E LANCHONETE KARAÍBA</div>
+        <div class="center">Souza & Belmiro LTDA</div>
+        <div class="center">CNPJ: 08.892.783/0001-77</div>
+        <div class="center">Rua Rafael Marino Neto, 266</div>
+        <div class="center">Jardim Indaia, Uberlândia - MG</div>
+        <div class="center">CEP: 38411-186</div>
+        <div class="divider"></div>
+        
+        <div class="field"><span class="bold">Pedido:</span> ${order.codigo_pedido || "N/A"}</div>
+        <div class="field"><span class="bold">Data:</span> ${currentDate}</div>
+        <div class="field"><span class="bold">Cliente:</span> ${order.nome_cliente || "N/A"}</div>
+        <div class="field"><span class="bold">Telefone:</span> ${order.telefone || "N/A"}</div>
+        <div class="field"><span class="bold">Endereço:</span> ${order.endereco_completo || "N/A"}</div>
+        <div class="field"><span class="bold">Bairro:</span> ${order.bairro || "N/A"}</div>
+        <div class="divider"></div>
+        
+        <div class="bold">ITENS:</div>
+        <div style="margin: 5px 0; font-size: 13px; font-weight: bold;">
+          ${order.itens || "Itens não informados"}
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="field"><span class="bold">Valor do pedido:</span> R$ ${formatCurrency(order.valor_pedido)}</div>
+        <div class="field"><span class="bold">Taxa de entrega:</span> R$ ${formatCurrency(order.taxa_entrega)}</div>
+        <div class="divider"></div>
+        <div class="item bold"><span>TOTAL</span><span>R$ ${calculateTotal()}</span></div>
+        <div class="divider"></div>
+        
+        <div class="field"><span class="bold">Pagamento:</span> ${order.forma_pagamento || "N/A"}</div>
+        <div class="field"><span class="bold">Tempo de entrega:</span> ${order.tempo_entrega_estimado || "N/A"}</div>
+        <div class="field"><span class="bold">Status:</span> ${order.status || "N/A"}</div>
+        <div class="divider"></div>
+        
+        <div class="center">Agradecemos pela preferência!</div>
+        <div class="center">Restaurante e Lanchonete Karaíba</div>
+        
+        ${copyNumber === 1 ? '<div class="center bold" style="margin-top: 10px;">1ª VIA - CLIENTE</div>' : '<div class="center bold" style="margin-top: 10px;">2ª VIA - ESTABELECIMENTO</div>'}
+      </div>
+      
+      ${copyNumber === 1 ? '<div style="page-break-after: always;"></div>' : ''}
+    `;
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -265,40 +325,8 @@ const Dashboard = () => {
           </style>
         </head>
         <body>
-          <div class="cupom">
-            <div class="center bold">RESTAURANTE E LANCHONETE KARAÍBA</div>
-            <div class="center">Souza & Belmiro LTDA</div>
-            <div class="center">CNPJ: 08.892.783/0001-77</div>
-            <div class="center">Rua Rafael Marino Neto, 266</div>
-            <div class="center">Jardim Indaia, Uberlândia - MG</div>
-            <div class="center">CEP: 38411-186</div>
-            <div class="divider"></div>
-            
-            <div class="field"><span class="bold">Pedido:</span> ${order.codigo_pedido || "N/A"}</div>
-            <div class="field"><span class="bold">Data:</span> ${currentDate}</div>
-            <div class="field"><span class="bold">Cliente:</span> ${order.nome_cliente || "N/A"}</div>
-            <div class="field"><span class="bold">Telefone:</span> ${order.telefone || "N/A"}</div>
-            <div class="field"><span class="bold">Endereço:</span> ${order.endereco_completo || "N/A"}</div>
-            <div class="field"><span class="bold">Bairro:</span> ${order.bairro || "N/A"}</div>
-            <div class="divider"></div>
-            
-            <div class="bold">ITENS:</div>
-            <div style="margin: 5px 0; font-size: 13px; font-weight: bold;">
-              ${order.itens || "Itens não informados"}
-            </div>
-            
-            <div class="divider"></div>
-            <div class="item bold"><span>TOTAL</span><span>R$ ${order.valor_total || "0,00"}</span></div>
-            <div class="divider"></div>
-            
-            <div class="field"><span class="bold">Pagamento:</span> ${order.forma_pagamento || "N/A"}</div>
-            <div class="field"><span class="bold">Tempo de entrega:</span> ${order.tempo_entrega_estimado || "N/A"}</div>
-            <div class="field"><span class="bold">Status:</span> ${order.status || "N/A"}</div>
-            <div class="divider"></div>
-            
-            <div class="center">Agradecemos pela preferência!</div>
-            <div class="center">Restaurante e Lanchonete Karaíba</div>
-          </div>
+          ${generateCupomHTML(1)}
+          ${generateCupomHTML(2)}
         </body>
       </html>
     `);

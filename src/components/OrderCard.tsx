@@ -15,6 +15,8 @@ interface Order {
   bairro: string | null;
   itens: string | null;
   valor_total: string | null;
+  valor_pedido: string | null;
+  taxa_entrega: string | null;
   forma_pagamento: string | null;
   tempo_entrega_estimado: string | null;
   status: string | null;
@@ -32,8 +34,15 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const formatCurrency = (value: string | null) => {
-    if (!value) return "N/A";
-    return `R$ ${value}`;
+    if (!value) return "0,00";
+    return value.replace(".", ",");
+  };
+
+  const calculateTotal = () => {
+    const valorPedido = parseFloat(order.valor_pedido?.replace(",", ".") || "0");
+    const taxaEntrega = parseFloat(order.taxa_entrega?.replace(",", ".") || "0");
+    const total = valorPedido + taxaEntrega;
+    return total.toFixed(2).replace(".", ",");
   };
 
   const formatTime = (datetime: string) => {
@@ -166,9 +175,9 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
 
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <span className="font-medium">Valor:</span>
+                  <span className="font-medium">Total:</span>
                   <p className="text-sm font-bold text-primary">
-                    {formatCurrency(order.valor_total)}
+                    R$ {calculateTotal()}
                   </p>
                 </div>
                 <div>
@@ -199,7 +208,7 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
                 className="w-full text-xs py-1 h-6"
               >
                 <Printer className="w-3 h-3 mr-1" />
-                Imprimir
+                Imprimir (2 vias)
               </Button>
             </div>
           )}
@@ -226,12 +235,12 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
       </CardHeader>
       
       <CardContent className="space-y-2 px-3 pb-3">
-        {/* Priorizar status, nome e valor */}
+        {/* Priorizar status, nome e valor total calculado */}
         <div className="grid grid-cols-2 gap-2 text-xs mb-2">
           <div>
-            <span className="font-medium">Valor:</span>
+            <span className="font-medium">Total:</span>
             <p className="text-sm font-bold text-primary">
-              {formatCurrency(order.valor_total)}
+              R$ {calculateTotal()}
             </p>
           </div>
           <div>
@@ -292,7 +301,7 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
             className="w-full text-xs py-1 h-6"
           >
             <Printer className="w-3 h-3 mr-1" />
-            Imprimir
+            Imprimir (2 vias)
           </Button>
         </div>
       </CardContent>
