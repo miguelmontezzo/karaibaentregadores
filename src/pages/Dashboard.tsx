@@ -30,9 +30,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Verificar se usuário está logado
@@ -49,12 +47,11 @@ const Dashboard = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const {
-        data,
-        error
-      } = await supabase.from("pedidos_karaiba").select("*").order("data_hora_pedido", {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from("pedidos_karaiba")
+        .select("*")
+        .order("data_hora_pedido", { ascending: false });
+      
       if (error) {
         console.error("Erro ao buscar pedidos:", error);
         toast({
@@ -64,6 +61,7 @@ const Dashboard = () => {
         });
         return;
       }
+      
       setOrders(data || []);
     } catch (error) {
       console.error("Erro:", error);
@@ -83,7 +81,6 @@ const Dashboard = () => {
         const newOrder = payload.new as Order;
         setOrders(prev => [newOrder, ...prev]);
 
-        // Tocar som de notificação para novos pedidos pendentes
         if (newOrder.status === "Pendente") {
           playNotificationSound();
           toast({
@@ -104,7 +101,6 @@ const Dashboard = () => {
 
   const playNotificationSound = () => {
     try {
-      // Criar um áudio de notificação simples usando AudioContext
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -125,11 +121,11 @@ const Dashboard = () => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      const {
-        error
-      } = await supabase.from("pedidos_karaiba").update({
-        status: newStatus
-      }).eq("id", orderId);
+      const { error } = await supabase
+        .from("pedidos_karaiba")
+        .update({ status: newStatus })
+        .eq("id", orderId);
+      
       if (error) {
         console.error("Erro ao atualizar status:", error);
         toast({
@@ -140,13 +136,13 @@ const Dashboard = () => {
         return;
       }
 
-      // Enviar webhook
       let webhookUrl = "";
       if (newStatus === "Confirmado") {
         webhookUrl = "https://zzotech-n8n.lgctvv.easypanel.host/webhook/pedidoconfirmado";
       } else if (newStatus === "Saiu para entrega") {
         webhookUrl = "https://zzotech-n8n.lgctvv.easypanel.host/webhook/saiupentrega";
       }
+      
       if (webhookUrl) {
         const order = orders.find(o => o.id === orderId);
         if (order) {
@@ -158,9 +154,7 @@ const Dashboard = () => {
             };
             await fetch(webhookUrl, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify(webhookData)
             });
           } catch (webhookError) {
@@ -168,6 +162,7 @@ const Dashboard = () => {
           }
         }
       }
+      
       toast({
         title: "Status atualizado!",
         description: `Pedido alterado para: ${newStatus}`
@@ -196,13 +191,47 @@ const Dashboard = () => {
 
     const formatCurrency = (value: string | null) => {
       if (!value) return "0,00";
-      return value.replace(".", ",");
+      
+      // Remove caracteres não numéricos exceto vírgula e ponto
+      const cleanValue = value.replace(/[^\d,.-]/g, "");
+      
+      // Se já tem vírgula, use como está
+      if (cleanValue.includes(",")) {
+        return cleanValue;
+      }
+      
+      // Se tem ponto, converte para vírgula
+      if (cleanValue.includes(".")) {
+        return cleanValue.replace(".", ",");
+      }
+      
+      // Se é só número, adiciona ,00
+      return cleanValue + ",00";
+    };
+
+    const parseValue = (value: string | null): number => {
+      if (!value) return 0;
+      
+      // Remove caracteres não numéricos exceto vírgula e ponto
+      const cleanValue = value.replace(/[^\d,.-]/g, "");
+      
+      // Converte vírgula para ponto para cálculo
+      const numericValue = cleanValue.replace(",", ".");
+      
+      return parseFloat(numericValue) || 0;
     };
 
     const calculateTotal = () => {
-      const valorPedido = parseFloat(order.valor_pedido?.replace(",", ".") || "0");
-      const taxaEntrega = parseFloat(order.taxa_entrega?.replace(",", ".") || "0");
+      // Primeiro verifica se já temos valor_total no banco
+      if (order.valor_total) {
+        return formatCurrency(order.valor_total);
+      }
+      
+      // Se não, calcula somando valor_pedido + taxa_entrega
+      const valorPedido = parseValue(order.valor_pedido);
+      const taxaEntrega = parseValue(order.taxa_entrega);
       const total = valorPedido + taxaEntrega;
+      
       return total.toFixed(2).replace(".", ",");
     };
 
@@ -226,7 +255,7 @@ const Dashboard = () => {
         <div class="divider"></div>
         
         <div class="bold">ITENS:</div>
-        <div style="margin: 5px 0; font-size: 13px; font-weight: bold;">
+        <div style="margin: 5px 0; font-size: 15px; font-weight: bold;">
           ${order.itens || "Itens não informados"}
         </div>
         
@@ -276,7 +305,7 @@ const Dashboard = () => {
               margin: 20px auto;
               padding: 10px;
               border: 1px dashed #000;
-              font-size: 14px;
+              font-size: 15px;
               line-height: 1.4;
               font-weight: bold;
             }
@@ -316,7 +345,6 @@ const Dashboard = () => {
                 font-weight: bold !important;
               }
               
-              /* Remove browser headers and footers */
               html, body {
                 height: auto !important;
                 overflow: visible !important;
@@ -334,7 +362,6 @@ const Dashboard = () => {
     printWindow.document.close();
     printWindow.focus();
     
-    // Add a small delay to ensure styles are loaded before printing
     setTimeout(() => {
       printWindow.print();
       printWindow.close();
@@ -345,7 +372,7 @@ const Dashboard = () => {
   const getConfirmedOrders = () => orders.filter(order => order.status === "Confirmado");
   const getDeliveryOrders = () => {
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    const todayStr = today.toISOString().split('T')[0];
 
     return orders.filter(order => {
       if (order.status !== "Saiu para entrega") return false;
@@ -356,15 +383,18 @@ const Dashboard = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
+    return (
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Carregando pedidos...</p>
         </div>
-      </div>;
+      </div>
+    );
   }
 
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="shadow-md bg-red-700">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between bg-red-700">
@@ -379,7 +409,12 @@ const Dashboard = () => {
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleLogout} className="border-primary-foreground/20 text-xs py-1 h-7 bg-white/[0.98] text-red-900">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleLogout} 
+            className="border-primary-foreground/20 text-xs py-1 h-7 bg-white/[0.98] text-red-900"
+          >
             <LogOut className="w-3 h-3 mr-1" />
             Sair
           </Button>
@@ -397,10 +432,19 @@ const Dashboard = () => {
               </h2>
             </div>
             <div className="p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
-              {getPendingOrders().map(order => <OrderCard key={order.id} order={order} onStatusChange={updateOrderStatus} onPrint={printOrder} />)}
-              {getPendingOrders().length === 0 && <p className="text-center text-muted-foreground py-8 text-sm">
+              {getPendingOrders().map(order => (
+                <OrderCard 
+                  key={order.id} 
+                  order={order} 
+                  onStatusChange={updateOrderStatus} 
+                  onPrint={printOrder} 
+                />
+              ))}
+              {getPendingOrders().length === 0 && (
+                <p className="text-center text-muted-foreground py-8 text-sm">
                   Nenhum pedido pendente
-                </p>}
+                </p>
+              )}
             </div>
           </div>
 
@@ -412,10 +456,19 @@ const Dashboard = () => {
               </h2>
             </div>
             <div className="p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
-              {getConfirmedOrders().map(order => <OrderCard key={order.id} order={order} onStatusChange={updateOrderStatus} onPrint={printOrder} />)}
-              {getConfirmedOrders().length === 0 && <p className="text-center text-muted-foreground py-8 text-sm">
+              {getConfirmedOrders().map(order => (
+                <OrderCard 
+                  key={order.id} 
+                  order={order} 
+                  onStatusChange={updateOrderStatus} 
+                  onPrint={printOrder} 
+                />
+              ))}
+              {getConfirmedOrders().length === 0 && (
+                <p className="text-center text-muted-foreground py-8 text-sm">
                   Nenhum pedido confirmado
-                </p>}
+                </p>
+              )}
             </div>
           </div>
 
@@ -427,15 +480,25 @@ const Dashboard = () => {
               </h2>
             </div>
             <div className="p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
-              {getDeliveryOrders().map(order => <OrderCard key={order.id} order={order} onStatusChange={updateOrderStatus} onPrint={printOrder} />)}
-              {getDeliveryOrders().length === 0 && <p className="text-center text-muted-foreground py-8 text-sm">
+              {getDeliveryOrders().map(order => (
+                <OrderCard 
+                  key={order.id} 
+                  order={order} 
+                  onStatusChange={updateOrderStatus} 
+                  onPrint={printOrder} 
+                />
+              ))}
+              {getDeliveryOrders().length === 0 && (
+                <p className="text-center text-muted-foreground py-8 text-sm">
                   Nenhum pedido em entrega hoje
-                </p>}
+                </p>
+              )}
             </div>
           </div>
         </div>
       </main>
-    </div>;
+    </div>
+  );
 };
 
 export default Dashboard;

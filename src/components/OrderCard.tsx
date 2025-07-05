@@ -35,13 +35,47 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
   
   const formatCurrency = (value: string | null) => {
     if (!value) return "0,00";
-    return value.replace(".", ",");
+    
+    // Remove caracteres não numéricos exceto vírgula e ponto
+    const cleanValue = value.replace(/[^\d,.-]/g, "");
+    
+    // Se já tem vírgula, use como está
+    if (cleanValue.includes(",")) {
+      return cleanValue;
+    }
+    
+    // Se tem ponto, converte para vírgula
+    if (cleanValue.includes(".")) {
+      return cleanValue.replace(".", ",");
+    }
+    
+    // Se é só número, adiciona ,00
+    return cleanValue + ",00";
+  };
+
+  const parseValue = (value: string | null): number => {
+    if (!value) return 0;
+    
+    // Remove caracteres não numéricos exceto vírgula e ponto
+    const cleanValue = value.replace(/[^\d,.-]/g, "");
+    
+    // Converte vírgula para ponto para cálculo
+    const numericValue = cleanValue.replace(",", ".");
+    
+    return parseFloat(numericValue) || 0;
   };
 
   const calculateTotal = () => {
-    const valorPedido = parseFloat(order.valor_pedido?.replace(",", ".") || "0");
-    const taxaEntrega = parseFloat(order.taxa_entrega?.replace(",", ".") || "0");
+    // Primeiro verifica se já temos valor_total no banco
+    if (order.valor_total) {
+      return formatCurrency(order.valor_total);
+    }
+    
+    // Se não, calcula somando valor_pedido + taxa_entrega
+    const valorPedido = parseValue(order.valor_pedido);
+    const taxaEntrega = parseValue(order.taxa_entrega);
     const total = valorPedido + taxaEntrega;
+    
     return total.toFixed(2).replace(".", ",");
   };
 
@@ -173,18 +207,23 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
 
               <Separator />
 
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <span className="font-medium">Total:</span>
-                  <p className="text-sm font-bold text-primary">
-                    R$ {calculateTotal()}
-                  </p>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="font-medium">Valor do pedido:</span>
+                  <span>R$ {formatCurrency(order.valor_pedido)}</span>
                 </div>
-                <div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Taxa de entrega:</span>
+                  <span>R$ {formatCurrency(order.taxa_entrega)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-bold text-sm text-primary">
+                  <span>TOTAL:</span>
+                  <span>R$ {calculateTotal()}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="font-medium">Pagamento:</span>
-                  <p className="text-xs">
-                    {order.forma_pagamento || "N/A"}
-                  </p>
+                  <span>{order.forma_pagamento || "N/A"}</span>
                 </div>
               </div>
 
@@ -235,19 +274,24 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
       </CardHeader>
       
       <CardContent className="space-y-2 px-3 pb-3">
-        {/* Priorizar status, nome e valor total calculado */}
-        <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-          <div>
-            <span className="font-medium">Total:</span>
-            <p className="text-sm font-bold text-primary">
-              R$ {calculateTotal()}
-            </p>
+        {/* Valores detalhados */}
+        <div className="space-y-1 text-xs">
+          <div className="flex justify-between">
+            <span className="font-medium">Valor do pedido:</span>
+            <span>R$ {formatCurrency(order.valor_pedido)}</span>
           </div>
-          <div>
+          <div className="flex justify-between">
+            <span className="font-medium">Taxa de entrega:</span>
+            <span>R$ {formatCurrency(order.taxa_entrega)}</span>
+          </div>
+          <Separator />
+          <div className="flex justify-between font-bold text-sm text-primary">
+            <span>TOTAL:</span>
+            <span>R$ {calculateTotal()}</span>
+          </div>
+          <div className="flex justify-between">
             <span className="font-medium">Pagamento:</span>
-            <p className="text-xs">
-              {order.forma_pagamento || "N/A"}
-            </p>
+            <span className="text-xs">{order.forma_pagamento || "N/A"}</span>
           </div>
         </div>
 
