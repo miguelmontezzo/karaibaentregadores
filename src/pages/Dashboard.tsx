@@ -43,15 +43,6 @@ const Dashboard = () => {
     setUser(JSON.parse(savedUser));
     fetchOrders();
     setupRealtimeUpdates();
-
-    // Configurar atualização automática a cada 30 segundos
-    const intervalId = setInterval(() => {
-      fetchOrders();
-    }, 30000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
   }, [navigate]);
 
   const fetchOrders = async () => {
@@ -109,11 +100,16 @@ const Dashboard = () => {
           });
         }
       } else if (payload.eventType === "UPDATE") {
-        setOrders(prev => prev.map(order => order.id === payload.new.id ? payload.new as Order : order));
+        const updatedOrder = payload.new as Order;
+        setOrders(prev => prev.map(order => 
+          order.id === updatedOrder.id ? updatedOrder : order
+        ));
+        console.log("Order updated in real-time:", updatedOrder);
       } else if (payload.eventType === "DELETE") {
         setOrders(prev => prev.filter(order => order.id !== payload.old.id));
       }
     }).subscribe();
+    
     return () => {
       supabase.removeChannel(channel);
     };
@@ -141,6 +137,8 @@ const Dashboard = () => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      console.log("Updating order status:", orderId, "to:", newStatus);
+      
       const { error } = await supabase
         .from("pedidos_karaiba")
         .update({ status: newStatus })
@@ -155,6 +153,11 @@ const Dashboard = () => {
         });
         return;
       }
+
+      // Atualizar localmente também para garantir resposta imediata
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ));
 
       let webhookUrl = "";
       if (newStatus === "Confirmado") {
