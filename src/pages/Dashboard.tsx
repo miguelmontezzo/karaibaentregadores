@@ -235,6 +235,22 @@ const Dashboard = () => {
       return total.toFixed(2).replace(".", ",");
     };
 
+    // Formatar itens - cada item em uma linha
+    const formatItens = (itens: string | null) => {
+      if (!itens) return "Itens não informados";
+      
+      // Separar itens por vírgula, ponto e vírgula ou quebra de linha
+      const itemsList = itens.split(/[,;]|\n/).map(item => item.trim()).filter(item => item.length > 0);
+      
+      // Se não conseguiu separar, retorna como está
+      if (itemsList.length <= 1) {
+        return itens;
+      }
+      
+      // Retorna cada item em uma linha
+      return itemsList.map(item => `• ${item}`).join('<br>');
+    };
+
     // Gerar HTML para 2 cópias do cupom
     const generateCupomHTML = (copyNumber: number) => `
       <div class="cupom">
@@ -255,8 +271,8 @@ const Dashboard = () => {
         <div class="divider"></div>
         
         <div class="bold">ITENS:</div>
-        <div style="margin: 5px 0; font-size: 15px; font-weight: bold;">
-          ${order.itens || "Itens não informados"}
+        <div style="margin: 5px 0; font-size: 15px; font-weight: bold; line-height: 1.4;">
+          ${formatItens(order.itens)}
         </div>
         
         <div class="divider"></div>
