@@ -5,9 +5,10 @@ interface OrderStatusActionsProps {
   status: string | null;
   orderId: string;
   onStatusChange: (orderId: string, status: string) => void;
+  hasAddress: boolean;
 }
 
-const OrderStatusActions = ({ status, orderId, onStatusChange }: OrderStatusActionsProps) => {
+const OrderStatusActions = ({ status, orderId, onStatusChange, hasAddress }: OrderStatusActionsProps) => {
   if (status === "Pendente") {
     return (
       <Button
@@ -22,8 +23,9 @@ const OrderStatusActions = ({ status, orderId, onStatusChange }: OrderStatusActi
   }
   
   if (status === "Confirmado") {
-    return (
-      <div className="space-y-1">
+    // Se não tem endereço (retirada), mostrar apenas "Pronto para retirada"
+    if (!hasAddress) {
+      return (
         <Button
           size="sm"
           onClick={() => onStatusChange(orderId, "Pronto para retirada")}
@@ -32,15 +34,19 @@ const OrderStatusActions = ({ status, orderId, onStatusChange }: OrderStatusActi
           <Check className="w-3 h-3 mr-1" />
           Pronto para retirada
         </Button>
-        <Button
-          size="sm"
-          onClick={() => onStatusChange(orderId, "Saiu para entrega")}
-          className="w-full bg-status-delivery hover:bg-status-delivery/90 text-status-delivery-foreground text-xs py-1 h-7"
-        >
-          <Truck className="w-3 h-3 mr-1" />
-          Saiu para entrega
-        </Button>
-      </div>
+      );
+    }
+    
+    // Se tem endereço (entrega), mostrar apenas "Saiu para entrega"
+    return (
+      <Button
+        size="sm"
+        onClick={() => onStatusChange(orderId, "Saiu para entrega")}
+        className="w-full bg-status-delivery hover:bg-status-delivery/90 text-status-delivery-foreground text-xs py-1 h-7"
+      >
+        <Truck className="w-3 h-3 mr-1" />
+        Saiu para entrega
+      </Button>
     );
   }
   

@@ -98,6 +98,7 @@ const ExpandedOrderCard = ({ order, onStatusChange, onPrint }: ExpandedOrderCard
             status={order.status}
             orderId={order.id}
             onStatusChange={onStatusChange}
+            hasAddress={!!order.endereco_completo}
           />
           
           <Button
