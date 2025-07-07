@@ -107,14 +107,24 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
     
     if (currentStatus === "Confirmado") {
       return (
-        <Button
-          size="sm"
-          onClick={() => onStatusChange(order.id, "Saiu para entrega")}
-          className="w-full bg-status-delivery hover:bg-status-delivery/90 text-status-delivery-foreground text-xs py-1 h-7"
-        >
-          <Truck className="w-3 h-3 mr-1" />
-          Saiu para entrega
-        </Button>
+        <div className="space-y-1">
+          <Button
+            size="sm"
+            onClick={() => onStatusChange(order.id, "Pronto para retirada")}
+            className="w-full bg-green-600 hover:bg-green-700 text-white text-xs py-1 h-7"
+          >
+            <Check className="w-3 h-3 mr-1" />
+            Pronto para retirada
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => onStatusChange(order.id, "Saiu para entrega")}
+            className="w-full bg-status-delivery hover:bg-status-delivery/90 text-status-delivery-foreground text-xs py-1 h-7"
+          >
+            <Truck className="w-3 h-3 mr-1" />
+            Saiu para entrega
+          </Button>
+        </div>
       );
     }
     
@@ -131,6 +141,8 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
       className = "bg-status-confirmed text-status-confirmed-foreground";
     } else if (status === "Saiu para entrega") {
       className = "bg-status-delivery text-status-delivery-foreground";
+    } else if (status === "Pronto para retirada") {
+      className = "bg-green-600 text-white";
     }
     
     return (
@@ -140,8 +152,8 @@ const OrderCard = ({ order, onStatusChange, onPrint }: OrderCardProps) => {
     );
   };
 
-  // Card resumido para "Saiu para entrega"
-  if (order.status === "Saiu para entrega") {
+  // Card resumido para "Saiu para entrega" e "Pronto para retirada"
+  if (order.status === "Saiu para entrega" || order.status === "Pronto para retirada") {
     return (
       <Card className="w-full shadow-sm hover:shadow-md transition-shadow">
         <CardHeader className="pb-2 pt-3 px-3">

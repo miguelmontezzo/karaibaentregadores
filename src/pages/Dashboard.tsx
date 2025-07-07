@@ -164,6 +164,8 @@ const Dashboard = () => {
         webhookUrl = "https://zzotech-n8n.lgctvv.easypanel.host/webhook/pedidoconfirmado";
       } else if (newStatus === "Saiu para entrega") {
         webhookUrl = "https://zzotech-n8n.lgctvv.easypanel.host/webhook/saiupentrega";
+      } else if (newStatus === "Pronto para retirada") {
+        webhookUrl = "https://zzotech-n8n.lgctvv.easypanel.host/webhook/prontopararetirada";
       }
       
       if (webhookUrl) {
@@ -430,12 +432,12 @@ const Dashboard = () => {
 
   const getPendingOrders = () => orders.filter(order => order.status === "Pendente");
   const getConfirmedOrders = () => orders.filter(order => order.status === "Confirmado");
-  const getDeliveryOrders = () => {
+  const getConfirmedForDeliveryOrders = () => {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
 
     return orders.filter(order => {
-      if (order.status !== "Saiu para entrega") return false;
+      if (order.status !== "Saiu para entrega" && order.status !== "Pronto para retirada") return false;
       const orderDate = new Date(order.data_hora_pedido);
       const orderDateStr = orderDate.toISOString().split('T')[0];
       return orderDateStr === todayStr;
@@ -544,15 +546,15 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Coluna Saiu para entrega */}
+          {/* Coluna Pedidos Confirmados */}
           <div className="bg-card rounded-lg shadow-sm border">
             <div className="bg-status-delivery text-status-delivery-foreground p-3 rounded-t-lg">
               <h2 className="font-semibold text-sm">
-                Saiu para entrega - Hoje ({getDeliveryOrders().length})
+                Pedidos Confirmados - Hoje ({getConfirmedForDeliveryOrders().length})
               </h2>
             </div>
             <div className="p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
-              {getDeliveryOrders().map(order => (
+              {getConfirmedForDeliveryOrders().map(order => (
                 <OrderCard 
                   key={order.id} 
                   order={order} 
@@ -560,9 +562,9 @@ const Dashboard = () => {
                   onPrint={printOrder} 
                 />
               ))}
-              {getDeliveryOrders().length === 0 && (
+              {getConfirmedForDeliveryOrders().length === 0 && (
                 <p className="text-center text-muted-foreground py-8 text-sm">
-                  Nenhum pedido em entrega hoje
+                  Nenhum pedido confirmado hoje
                 </p>
               )}
             </div>
