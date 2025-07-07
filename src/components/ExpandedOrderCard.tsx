@@ -64,7 +64,7 @@ const ExpandedOrderCard = ({ order, onStatusChange, onPrint }: ExpandedOrderCard
           <div className="flex items-start space-x-2">
             <span className="font-medium">📍</span>
             <span className="text-xs leading-relaxed">
-              {order.endereco_completo || "Endereço não informado"}
+              {order.endereco_completo || "Retirada"}
             </span>
           </div>
         </div>
