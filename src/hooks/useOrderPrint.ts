@@ -71,8 +71,15 @@ export const useOrderPrint = () => {
         return `• ${itens}`;
       }
       
-      // Retorna cada item em uma linha separada
-      return itemsList.map(item => `• ${item}`).join('\n');
+      // Retorna cada item em uma linha separada, identificando títulos e itens
+      return itemsList.map(item => {
+        // Se for título (sem números, sem detalhes específicos), colocar em caixa alta
+        const isTitle = !item.match(/\d+/) && !item.includes('R$') && item.length < 30;
+        if (isTitle) {
+          return `<span class="item-title">• ${item.toUpperCase()}</span>`;
+        }
+        return `<span class="item-detail">• ${item}</span>`;
+      }).join('\n');
     };
 
     // Gerar HTML para 2 cópias do cupom
@@ -176,6 +183,15 @@ export const useOrderPrint = () => {
               line-height: 1.3;
             }
             
+            .item-title {
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            
+            .item-detail {
+              font-weight: normal;
+            }
+            
             @media print { 
               @page {
                 margin: 0 !important;
@@ -204,6 +220,15 @@ export const useOrderPrint = () => {
               .item-line {
                 margin: 3px 0 !important;
                 line-height: 1.3 !important;
+              }
+              
+              .item-title {
+                font-weight: bold !important;
+                text-transform: uppercase !important;
+              }
+              
+              .item-detail {
+                font-weight: normal !important;
               }
               
               html, body {
