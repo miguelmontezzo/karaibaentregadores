@@ -73,12 +73,21 @@ export const useOrderPrint = () => {
       
       // Retorna cada item em uma linha separada, identificando títulos e itens
       return itemsList.map(item => {
-        // Se for título (sem números, sem detalhes específicos), colocar em caixa alta
-        const isTitle = !item.match(/\d+/) && !item.includes('R$') && item.length < 30;
+        // Remover bullet point se existir para análise
+        const cleanItem = item.replace(/^[•\-\*]\s*/, '');
+        
+        // Identificar títulos: pratos principais como "Almoço Karaiba", "Parmegiana Karaiba", etc.
+        // Títulos geralmente contêm "Karaiba" ou são nomes de pratos sem quantidades específicas
+        const isTitle = cleanItem.toLowerCase().includes('karaiba') || 
+                       cleanItem.toLowerCase().includes('almoço') ||
+                       cleanItem.toLowerCase().includes('parmegiana') ||
+                       (cleanItem.length < 30 && !cleanItem.includes('c/') && !cleanItem.toLowerCase().includes('arroz') && 
+                        !cleanItem.toLowerCase().includes('feijão') && !cleanItem.toLowerCase().includes('picadinho'));
+        
         if (isTitle) {
-          return `<span class="item-title">• ${item.toUpperCase()}</span>`;
+          return `<span class="item-title">• ${cleanItem.toUpperCase()}</span>`;
         }
-        return `<span class="item-detail">• ${item}</span>`;
+        return `<span class="item-detail">• ${cleanItem}</span>`;
       }).join('\n');
     };
 
