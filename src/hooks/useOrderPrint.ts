@@ -66,26 +66,17 @@ export const useOrderPrint = () => {
       // Separar itens por vírgula, ponto e vírgula ou quebra de linha
       const itemsList = itens.split(/[,;]|\n/).map(item => item.trim()).filter(item => item.length > 0);
       
-      // Se não conseguiu separar, retorna como está mas com quebra de linha
-      if (itemsList.length <= 1) {
-        return `• ${itens}`;
-      }
-      
-      // Retorna cada item em uma linha separada, identificando títulos e itens
+      // Mapear itens, tratando linhas com "#" como títulos (CAIXA ALTA e negrito)
       return itemsList.map(item => {
-        // Remover bullet point se existir para análise
-        const cleanItem = item.replace(/^[•\-\*]\s*/, '');
+        // Remover bullet inicial (•, -, *) e espaços para análise
+        const cleanItem = item.replace(/^[•\-\*]\s*/, '').trim();
         
-        // Identificar títulos: pratos principais como "Almoço Karaiba", "Parmegiana Karaiba", etc.
-        // Títulos geralmente contêm "Karaiba" ou são nomes de pratos sem quantidades específicas
-        const isTitle = cleanItem.toLowerCase().includes('karaiba') || 
-                       cleanItem.toLowerCase().includes('almoço') ||
-                       cleanItem.toLowerCase().includes('parmegiana') ||
-                       (cleanItem.length < 30 && !cleanItem.includes('c/') && !cleanItem.toLowerCase().includes('arroz') && 
-                        !cleanItem.toLowerCase().includes('feijão') && !cleanItem.toLowerCase().includes('picadinho'));
+        // Linha de título se contiver marcador "#" (geralmente no início)
+        const isTitle = /^#/.test(cleanItem) || cleanItem.includes('#');
         
         if (isTitle) {
-          return `<span class="item-title">• ${cleanItem.toUpperCase()}</span>`;
+          const titleText = cleanItem.replace(/#/g, '').trim();
+          return `<span class="item-title">• ${titleText.toUpperCase()}</span>`;
         }
         return `<span class="item-detail">• ${cleanItem}</span>`;
       }).join('\n');
