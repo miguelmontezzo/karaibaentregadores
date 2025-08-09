@@ -63,25 +63,49 @@ export const useOrderPrint = () => {
     const formatItens = (itens: string | null) => {
       if (!itens) return "Itens não informados";
       
-      // Separar itens por vírgula, ponto e vírgula ou quebra de linha
-      const itemsList = itens.split(/[,;]|\n/).map(item => item.trim()).filter(item => item.length > 0);
-      
-      // Mapear itens, tratando linhas com "#" como títulos (CAIXA ALTA e negrito)
-      return itemsList.map(item => {
-        // Remover bullet inicial (•, -, *) e espaços para análise
-        const cleanItem = item.replace(/^[•\-\*]\s*/, '').trim();
-        
-        // Linha de título se contiver marcador "#" (geralmente no início)
-        const isTitle = /^#/.test(cleanItem) || cleanItem.includes('#');
-        
-        if (isTitle) {
-          const titleText = cleanItem.replace(/#/g, '').trim();
-          return `<span class="item-title">• ${titleText.toUpperCase()}</span>`;
-        }
-        return `<span class="item-detail">• ${cleanItem}</span>`;
-      }).join('\n');
-    };
+      // Normaliza e separa itens por quebra de linha, ponto e vírgula, vírgula ou bullet (•)
+      const raw = itens.replace(/[{}"]/g, " ");
+      const parts = raw
+        .split(/[\n;,•]/)
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
+      if (parts.length === 0) return "Itens não informados";
 
+      const lines: string[] = [];
+      let inSection = false; // estamos após um título (produto)
+
+      const upperRatio = (s: string) => {
+        const letters = s.match(/\p{L}/gu) || [];
+        if (letters.length === 0) return 0;
+        const uppers = letters.filter((ch) => ch === ch.toUpperCase()).length;
+        return uppers / letters.length;
+      };
+
+      for (let p of parts) {
+        // Remove apenas bullets iniciais, preservando hífen para detectar detalhe
+        const noLeadingBullets = p.replace(/^[•\s]+/, "");
+        const hasHyphenPrefix = /^[-–—]\s*/.test(noLeadingBullets);
+        const text = noLeadingBullets.replace(/^[-–—]\s*/, "").trim();
+        if (!text) continue;
+
+        const startsWithQty = /^\d+\s*[xX]\b/.test(text);
+        const hasBrand = /kara[ií]ba/i.test(text);
+        const isUpperish = upperRatio(text) >= 0.6 && text.length >= 4;
+
+        // Título: não começa com hífen e tem marca, ou quantidade no início, ou é majoritariamente maiúsculo
+        const isTitle = !hasHyphenPrefix && (hasBrand || startsWithQty || isUpperish);
+
+        if (isTitle) {
+          inSection = true;
+          lines.push(`<span class="item-title">• ${text.toUpperCase()}</span>`);
+        } else {
+          // Detalhe: qualquer linha com hífen OU (sem hífen mas no contexto de um título atual)
+          lines.push(`<span class="item-detail">• ${text}</span>`);
+        }
+      }
+
+      return lines.join('\n');
+    };
     // Gerar HTML para 2 cópias do cupom
     const generateCupomHTML = (copyNumber: number) => `
       <div class="cupom">
