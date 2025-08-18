@@ -15,7 +15,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const { orders, loading, fetchOrders, setupRealtimeUpdates, updateOrderStatus } = useOrders();
+  const { orders, loading, fetchOrders, setupRealtimeUpdates, updateOrderStatus, deleteOrder } = useOrders();
   const { printOrder } = useOrderPrint();
 
   useEffect(() => {
@@ -83,6 +83,7 @@ const Dashboard = () => {
               orders={orders}
               onStatusChange={updateOrderStatus}
               onPrint={printOrder}
+              onDelete={deleteOrder}
             />
           </TabsContent>
           

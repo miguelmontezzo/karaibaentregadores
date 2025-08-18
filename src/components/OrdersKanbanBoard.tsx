@@ -6,9 +6,10 @@ interface OrdersKanbanBoardProps {
   orders: Order[];
   onStatusChange: (orderId: string, status: string) => void;
   onPrint: (order: Order) => void;
+  onDelete?: (orderId: string) => void;
 }
 
-const OrdersKanbanBoard = ({ orders, onStatusChange, onPrint }: OrdersKanbanBoardProps) => {
+const OrdersKanbanBoard = ({ orders, onStatusChange, onPrint, onDelete }: OrdersKanbanBoardProps) => {
   const pendingOrders = getPendingOrders(orders);
   const confirmedOrders = getConfirmedOrders(orders);
   const confirmedForDeliveryOrders = getConfirmedForDeliveryOrders(orders);
@@ -30,6 +31,7 @@ const OrdersKanbanBoard = ({ orders, onStatusChange, onPrint }: OrdersKanbanBoar
                 order={order} 
                 onStatusChange={onStatusChange} 
                 onPrint={onPrint} 
+                onDelete={onDelete}
               />
             ))}
             {pendingOrders.length === 0 && (
@@ -54,6 +56,7 @@ const OrdersKanbanBoard = ({ orders, onStatusChange, onPrint }: OrdersKanbanBoar
                 order={order} 
                 onStatusChange={onStatusChange} 
                 onPrint={onPrint} 
+                onDelete={onDelete}
               />
             ))}
             {confirmedOrders.length === 0 && (
@@ -78,6 +81,7 @@ const OrdersKanbanBoard = ({ orders, onStatusChange, onPrint }: OrdersKanbanBoar
                 order={order} 
                 onStatusChange={onStatusChange} 
                 onPrint={onPrint} 
+                onDelete={onDelete}
               />
             ))}
             {confirmedForDeliveryOrders.length === 0 && (

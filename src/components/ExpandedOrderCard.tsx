@@ -1,20 +1,61 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Printer } from "lucide-react";
+import { Clock, Printer, Trash2 } from "lucide-react";
 import { Order } from "@/types/order";
 import { formatCurrency, calculateTotal } from "@/utils/currencyUtils";
 import { formatTime } from "@/utils/dateUtils";
 import OrderStatusBadge from "./OrderStatusBadge";
 import OrderStatusActions from "./OrderStatusActions";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface ExpandedOrderCardProps {
   order: Order;
   onStatusChange: (orderId: string, status: string) => void;
   onPrint: (order: Order) => void;
+  onDelete?: (orderId: string) => void;
 }
 
-const ExpandedOrderCard = ({ order, onStatusChange, onPrint }: ExpandedOrderCardProps) => {
+const ExpandedOrderCard = ({ order, onStatusChange, onPrint, onDelete }: ExpandedOrderCardProps) => {
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirm('Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch('https://zzotech-n8n.lgctvv.easypanel.host/webhook/deletarpedido', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: order.id }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Pedido excluído",
+          description: "O pedido foi excluído com sucesso.",
+        });
+        onDelete?.(order.id);
+      } else {
+        throw new Error('Erro ao excluir pedido');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir pedido:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o pedido. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   return (
     <Card className="w-full shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="pb-2 pt-3 px-3">
@@ -101,15 +142,29 @@ const ExpandedOrderCard = ({ order, onStatusChange, onPrint }: ExpandedOrderCard
             hasAddress={!!order.endereco_completo}
           />
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPrint(order)}
-            className="w-full text-xs py-1 h-6"
-          >
-            <Printer className="w-3 h-3 mr-1" />
-            Imprimir (2 vias)
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPrint(order)}
+              className="flex-1 text-xs py-1 h-6"
+            >
+              <Printer className="w-3 h-3 mr-1" />
+              Imprimir (2 vias)
+            </Button>
+            
+            {onDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="text-xs py-1 h-6 text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

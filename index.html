@@ -24,6 +24,20 @@
 
   <body>
     <div id="root"></div>
+    
+    <!-- Polyfills para compatibilidade Node.js no browser -->
+    <script>
+      window.global = window;
+      window.module = { exports: {} };
+      window.exports = {};
+      window.__dirname = '/';
+      window.__filename = '/index.html';
+      window.require = function(id) {
+        console.warn('require() called for:', id, '- returning empty object');
+        return {};
+      };
+    </script>
+    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

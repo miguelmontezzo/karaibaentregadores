@@ -131,11 +131,16 @@ export const useOrders = () => {
     }
   }, [orders, toast]);
 
+  const deleteOrder = useCallback((orderId: string) => {
+    setOrders(prev => prev.filter(order => order.id !== orderId));
+  }, []);
+
   return {
     orders,
     loading,
     fetchOrders,
     setupRealtimeUpdates,
-    updateOrderStatus
+    updateOrderStatus,
+    deleteOrder
   };
 };
