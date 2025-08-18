@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCustomers } from '@/hooks/useCustomers';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
 import { Customer, formatPhoneNumber, formatName } from '@/types/customer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -10,9 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw, Search, Users, UserCheck, UserX, Bot, Filter } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import ProtectedPhone from '@/components/ProtectedPhone';
 
 const CustomersTab = () => {
   const { customers, loading, error, fetchCustomers, updateCustomerIAStatus } = useCustomers();
+  const { isAdmin, loading: permissionLoading, userCargo, userName } = useUserPermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pause'>('all');
@@ -74,6 +77,11 @@ const CustomersTab = () => {
   };
 
   const handleToggleIA = async (customer: Customer, newStatus: boolean) => {
+    if (!isAdmin) {
+      alert('Acesso negado: Apenas administradores podem alterar o status da IA dos clientes.');
+      return;
+    }
+    
     if (customer.id) {
       await updateCustomerIAStatus(customer.id, newStatus);
     }
@@ -173,7 +181,10 @@ const CustomersTab = () => {
                 Gerenciar Atendimento IA
               </CardTitle>
               <CardDescription>
-                Ative ou desative o atendimento por IA para cada cliente
+                {isAdmin 
+                  ? "Ative ou desative o atendimento por IA para cada cliente"
+                  : `Visualização apenas - Usuário: ${userName} (${userCargo}) - Apenas administradores podem alterar configurações`
+                }
               </CardDescription>
             </div>
             <Button
@@ -188,6 +199,15 @@ const CustomersTab = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Alerta para usuários não-admin */}
+          {!isAdmin && (
+            <Alert className="mb-6 border-yellow-200 bg-yellow-50">
+              <AlertDescription className="text-yellow-800">
+                ⚠️ Você está visualizando esta seção apenas para consulta. Alterações nas configurações de IA 
+                são restritas a usuários com cargo de administrador.
+              </AlertDescription>
+            </Alert>
+          )}
           {/* Barra de Pesquisa e Filtros na mesma linha */}
           <div className="flex items-center justify-between mb-6">
             {/* Busca à esquerda */}
@@ -260,13 +280,19 @@ const CustomersTab = () => {
                         </div>
                         {customer.telefone && (
                           <div className="text-sm text-muted-foreground">
-                            {formatPhoneNumber(customer.telefone)}
+                            <ProtectedPhone
+                              phone={formatPhoneNumber(customer.telefone)}
+                              allowReveal={isAdmin}
+                            />
                           </div>
                         )}
                       </div>
                       <Badge 
-                        variant={customer.atendimento_ia === 'active' ? "default" : "secondary"}
-                        className={customer.atendimento_ia === 'active' ? "bg-green-600" : "bg-gray-500"}
+                        variant={customer.atendimento_ia === 'active' ? "default" : "destructive"}
+                        className={customer.atendimento_ia === 'active' 
+                          ? "bg-green-600 text-white" 
+                          : "bg-red-600 text-white hover:bg-red-700"
+                        }
                       >
                         {customer.atendimento_ia === 'active' ? "IA Ativa" : "IA Pausada"}
                       </Badge>
@@ -274,17 +300,24 @@ const CustomersTab = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <Label htmlFor={`ia-switch-${customer.id}`} className="text-sm">
-                      {customer.atendimento_ia === 'active' ? "Pausar" : "Ativar"} IA
+                    <Label 
+                      htmlFor={`ia-switch-${customer.id}`} 
+                      className={`text-sm ${!isAdmin ? 'text-gray-400' : ''}`}
+                    >
+                      {isAdmin 
+                        ? (customer.atendimento_ia === 'active' ? "Pausar" : "Ativar") + " IA"
+                        : "Somente Leitura"
+                      }
                     </Label>
                     <Switch
                       id={`ia-switch-${customer.id}`}
                       checked={customer.atendimento_ia === 'active'}
                       onCheckedChange={(checked) => handleToggleIA(customer, checked)}
+                      disabled={!isAdmin}
                       className={`${customer.atendimento_ia === 'active' 
                         ? 'data-[state=checked]:bg-green-600' 
                         : 'data-[state=unchecked]:bg-gray-400'
-                      }`}
+                      } ${!isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
                     />
                   </div>
                 </div>

@@ -27,15 +27,28 @@
     
     <!-- Polyfills para compatibilidade Node.js no browser -->
     <script>
-      window.global = window;
-      window.module = { exports: {} };
-      window.exports = {};
-      window.__dirname = '/';
-      window.__filename = '/index.html';
-      window.require = function(id) {
-        console.warn('require() called for:', id, '- returning empty object');
-        return {};
-      };
+      // Polyfills mais seguros para evitar conflitos com React
+      if (typeof window.global === 'undefined') {
+        window.global = window;
+      }
+      if (typeof window.module === 'undefined') {
+        window.module = { exports: {} };
+      }
+      if (typeof window.exports === 'undefined') {
+        window.exports = {};
+      }
+      if (typeof window.__dirname === 'undefined') {
+        window.__dirname = '/';
+      }
+      if (typeof window.__filename === 'undefined') {
+        window.__filename = '/index.html';
+      }
+      if (typeof window.require === 'undefined') {
+        window.require = function(id) {
+          console.warn('require() called for:', id, '- returning empty object');
+          return {};
+        };
+      }
     </script>
     
     <script type="module" src="/src/main.tsx"></script>

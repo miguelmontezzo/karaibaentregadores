@@ -7,6 +7,8 @@ import { formatCurrency, calculateTotal } from "@/utils/currencyUtils";
 import { formatTime } from "@/utils/dateUtils";
 import OrderStatusBadge from "./OrderStatusBadge";
 import OrderStatusActions from "./OrderStatusActions";
+import ProtectedPhone from "./ProtectedPhone";
+import DeleteOrderModal from "./DeleteOrderModal";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
@@ -21,11 +23,7 @@ const ExpandedOrderCard = ({ order, onStatusChange, onPrint, onDelete }: Expande
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async () => {
-    if (!confirm('Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.')) {
-      return;
-    }
-
+  const handleDelete = async (orderId: string) => {
     setIsDeleting(true);
     try {
       const response = await fetch('https://zzotech-n8n.lgctvv.easypanel.host/webhook/deletarpedido', {
@@ -33,7 +31,7 @@ const ExpandedOrderCard = ({ order, onStatusChange, onPrint, onDelete }: Expande
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: order.id }),
+        body: JSON.stringify({ id: orderId }),
       });
 
       if (response.ok) {
@@ -41,7 +39,7 @@ const ExpandedOrderCard = ({ order, onStatusChange, onPrint, onDelete }: Expande
           title: "Pedido excluído",
           description: "O pedido foi excluído com sucesso.",
         });
-        onDelete?.(order.id);
+        onDelete?.(orderId);
       } else {
         throw new Error('Erro ao excluir pedido');
       }
@@ -100,7 +98,7 @@ const ExpandedOrderCard = ({ order, onStatusChange, onPrint, onDelete }: Expande
         <div className="space-y-1 text-xs">
           <div className="flex items-center space-x-2">
             <span className="font-medium">📞</span>
-            <span>{order.telefone || "Não informado"}</span>
+            <ProtectedPhone phone={order.telefone} className="text-xs" />
           </div>
           <div className="flex items-start space-x-2">
             <span className="font-medium">📍</span>
@@ -154,15 +152,11 @@ const ExpandedOrderCard = ({ order, onStatusChange, onPrint, onDelete }: Expande
             </Button>
             
             {onDelete && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="text-xs py-1 h-6 text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
+              <DeleteOrderModal 
+                order={order}
+                onDelete={handleDelete}
+                isDeleting={isDeleting}
+              />
             )}
           </div>
         </div>

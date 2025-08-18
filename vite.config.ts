@@ -30,7 +30,10 @@ export default defineConfig(({ mode }) => ({
       "@radix-ui/react-dialog",
     ],
     include: [
-      "@supabase/supabase-js"
+      "@supabase/supabase-js",
+      "react",
+      "react-dom",
+      "react-dom/client"
     ]
   },
   define: {
