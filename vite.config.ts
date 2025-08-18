@@ -19,4 +19,23 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    exclude: [
+      "react-hook-form",
+      "@hookform/resolvers/zod",
+      "zod",
+      "@radix-ui/react-avatar",
+      "@radix-ui/react-switch",
+      "@radix-ui/react-progress",
+      "@radix-ui/react-dialog",
+    ],
+    include: [
+      "@supabase/supabase-js"
+    ]
+  },
+  define: {
+    global: 'globalThis',
+    module: '{}',
+    require: '(()=>{})',
+  },
 }));

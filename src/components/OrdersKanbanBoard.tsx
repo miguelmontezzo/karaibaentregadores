@@ -14,7 +14,7 @@ const OrdersKanbanBoard = ({ orders, onStatusChange, onPrint }: OrdersKanbanBoar
   const confirmedForDeliveryOrders = getConfirmedForDeliveryOrders(orders);
 
   return (
-    <main className="container mx-auto px-2 py-4">
+    <div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* Coluna Pendente */}
         <div className="bg-card rounded-lg shadow-sm border">
@@ -88,7 +88,7 @@ const OrdersKanbanBoard = ({ orders, onStatusChange, onPrint }: OrdersKanbanBoar
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 };
 
