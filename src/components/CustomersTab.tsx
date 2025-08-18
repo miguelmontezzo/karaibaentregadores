@@ -273,7 +273,7 @@ const CustomersTab = () => {
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <div>
                         <div className="font-medium">
                           {formatName(customer.nomewpp || 'Nome não disponível')}
@@ -287,15 +287,6 @@ const CustomersTab = () => {
                           </div>
                         )}
                       </div>
-                      <Badge 
-                        variant={customer.atendimento_ia === 'active' ? "default" : "destructive"}
-                        className={customer.atendimento_ia === 'active' 
-                          ? "bg-green-600 text-white" 
-                          : "bg-red-600 text-white hover:bg-red-700"
-                        }
-                      >
-                        {customer.atendimento_ia === 'active' ? "IA Ativa" : "IA Pausada"}
-                      </Badge>
                     </div>
                   </div>
                   
