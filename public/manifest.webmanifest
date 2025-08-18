@@ -9,13 +9,13 @@
   "description": "Painel gerencial de pedidos do Restaurante Karaíba.",
   "icons": [
     {
-      "src": "/iconeappgerencial.png",
+      "src": "/iconeappentregadores.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/iconeappgerencial.png",
+      "src": "/iconeappentregadores.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
