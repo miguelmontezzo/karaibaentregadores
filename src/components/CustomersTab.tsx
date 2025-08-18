@@ -208,24 +208,24 @@ const CustomersTab = () => {
               </AlertDescription>
             </Alert>
           )}
-          {/* Barra de Pesquisa e Filtros na mesma linha */}
-          <div className="flex items-center justify-between mb-6">
-            {/* Busca à esquerda */}
-            <div className="flex items-center space-x-2">
+          {/* Barra de Pesquisa e Filtros responsiva */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+            {/* Busca */}
+            <div className="flex items-center space-x-2 w-full md:w-auto">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por número ou nome..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-80"
+                className="w-full md:w-80"
               />
             </div>
             
-            {/* Filtros à direita */}
-            <div className="flex items-center space-x-2">
+            {/* Filtros */}
+            <div className="flex items-center space-x-2 w-full md:w-auto md:justify-end">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filtrar por status:</span>
-              <div className="flex space-x-2">
+              <span className="text-sm font-medium hidden md:inline">Filtrar por status:</span>
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant={statusFilter === 'all' ? 'default' : 'outline'}
                   size="sm"

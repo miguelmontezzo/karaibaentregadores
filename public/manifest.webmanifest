@@ -1,0 +1,25 @@
+{
+  "name": "Pedidos Karaíba - Gerencial",
+  "short_name": "Karaíba",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7a0f12",
+  "description": "Painel gerencial de pedidos do Restaurante Karaíba.",
+  "icons": [
+    {
+      "src": "/iconeappgerencial.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/iconeappgerencial.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
