@@ -251,8 +251,12 @@ const Painel = () => {
 
         <Tabs defaultValue="em-rota" className="w-full">
           <TabsList className="grid grid-cols-2 w-full md:w-auto">
-            <TabsTrigger value="em-rota">Pedidos para entregar <Badge className="ml-2" variant="secondary">{orders.length}</Badge></TabsTrigger>
-            <TabsTrigger value="entregues">Pedidos entregues <Badge className="ml-2" variant="secondary">{deliveredOrders.length}</Badge></TabsTrigger>
+            <TabsTrigger value="em-rota" className="w-full text-center leading-snug">
+              Pedidos para entregar <Badge className="ml-2" variant="secondary">{orders.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="entregues" className="w-full text-center leading-snug">
+              Pedidos entregues <Badge className="ml-2" variant="secondary">{deliveredOrders.length}</Badge>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="em-rota" className="mt-4">
