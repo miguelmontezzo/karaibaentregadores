@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { karaibaApiCall } from "@/integrations/supabase/restKaraiba";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { CheckCircle, XCircle, RefreshCcw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { playNotificationSound } from "@/utils/notificationSound";
+import MiniRouteMap from "@/components/MiniRouteMap";
 // removed logo import per header simplification
 
 type Order = {
@@ -20,8 +21,10 @@ type Order = {
   codigo_pedido?: string | null;
   nome_cliente?: string | null;
   data_hora_pedido?: string | null;
-  valor_total?: number | null;
+  valor_total?: string | number | null;
   forma_pagamento?: string | null;
+  endereco_completo?: string | null;
+  itens?: string | null;
 };
 
 const Painel = () => {
@@ -33,6 +36,9 @@ const Painel = () => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
+  const [detailsOrder, setDetailsOrder] = useState<Order | null>(null);
+  const hasLoadedOnceRef = useRef<boolean>(false);
   const [deliveryCode, setDeliveryCode] = useState<string>("");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [deliveryStatus, setDeliveryStatus] = useState<"idle" | "success" | "error">("idle");
@@ -43,7 +49,7 @@ const Painel = () => {
   useEffect(() => {
     const savedUser = localStorage.getItem("delivery_user");
     if (!savedUser) {
-      navigate("/login");
+      navigate("/");
       return;
     }
     try {
@@ -72,15 +78,35 @@ const Painel = () => {
       const endpoint = `/pedidos_karaiba?select=*&status=eq.${status}${entregadorFilter}&data_hora_pedido=gte.${gte}&data_hora_pedido=lte.${lte}&order=data_hora_pedido.desc`;
       const data = await karaibaApiCall('GET', endpoint);
       const list: Order[] = Array.isArray(data) ? data : (data ? [data] as any : []);
-      // Se houver IDs novos, tocar som (não recarrega a página)
+      // Persistência entre navegações: comparar com última lista conhecida do usuário
+      const userKey = currentUser?.usuario ? `last_orders_${currentUser.usuario}` : null;
+      let storedIds = new Set<string>();
+      if (userKey) {
+        try {
+          const raw = localStorage.getItem(userKey);
+          const parsed: string[] = raw ? JSON.parse(raw) : [];
+          storedIds = new Set(parsed || []);
+        } catch {}
+      }
+      const currentIds = list.map(o => o.id);
+      const hasNewComparedToStored = currentIds.some(id => !storedIds.has(id));
+      if (userKey) {
+        try { localStorage.setItem(userKey, JSON.stringify(currentIds)); } catch {}
+      }
+
+      // Se houver IDs novos comparado ao estado atual E já houve primeira carga, toca
       setOrders(prev => {
         const prevIds = new Set((prev || []).map(p => p.id));
         const hasNew = list.some(o => !prevIds.has(o.id));
-        if (hasNew) {
+        if (hasLoadedOnceRef.current && hasNew && hasNewComparedToStored) {
           playNotificationSound();
         }
         return list;
       });
+      // Marca que o primeiro carregamento já ocorreu para não tocar no initial load
+      if (!hasLoadedOnceRef.current) {
+        hasLoadedOnceRef.current = true;
+      }
     } finally {
       if (!silent) setLoading(false);
     }
@@ -124,7 +150,7 @@ const Painel = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("delivery_user");
-    navigate("/login");
+    navigate("/");
   };
 
   const openDeliverModal = (order: Order) => {
@@ -133,6 +159,11 @@ const Painel = () => {
     setDeliveryStatus("idle");
     setDeliveryMessage("");
     setIsModalOpen(true);
+  };
+
+  const openDetailsModal = (order: Order) => {
+    setDetailsOrder(order);
+    setIsDetailsOpen(true);
   };
 
   const handleDeliver = async () => {
@@ -209,14 +240,16 @@ const Painel = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 w-full border-b border-red-700 bg-red-600 text-white">
-        <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">
-          <span className="text-lg font-semibold tracking-wide">Karaíba - Entregadores</span>
+        <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3 min-h-[56px]">
+          <span className="text-lg font-semibold tracking-wide truncate">Karaíba - Entregadores</span>
           <div className="flex items-center gap-2">
-            <Button onClick={handleRefresh} disabled={refreshing} className="h-9 rounded-md bg-white text-red-700 hover:bg-white/90">
-              <RefreshCcw className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">{refreshing ? "Atualizando..." : "Atualizar"}</span>
+            <Button onClick={handleRefresh} disabled={refreshing} className="h-9 rounded-md bg-white text-red-700 hover:bg-white/90 px-3">
+              <RefreshCcw className="h-4 w-4" />
             </Button>
-            <Button onClick={handleLogout} className="h-9 rounded-md bg-white text-red-700 hover:bg-white/90">Sair</Button>
+            <Button onClick={handleLogout} className="h-9 rounded-md bg-white text-red-700 hover:bg-white/90 px-3">
+              <span className="hidden sm:inline">Sair</span>
+              <span className="sm:hidden">⎋</span>
+            </Button>
           </div>
         </div>
       </header>
@@ -251,11 +284,13 @@ const Painel = () => {
 
         <Tabs defaultValue="em-rota" className="w-full">
           <TabsList className="grid grid-cols-2 w-full md:w-auto">
-            <TabsTrigger value="em-rota" className="w-full text-center leading-snug">
-              Pedidos para entregar <Badge className="ml-2" variant="secondary">{orders.length}</Badge>
+            <TabsTrigger value="em-rota" className="relative w-full text-center leading-snug pr-10">
+              <span className="block">Pedidos para entregar</span>
+              <Badge className="absolute right-2 top-1/2 -translate-y-1/2" variant="secondary">{orders.length}</Badge>
             </TabsTrigger>
-            <TabsTrigger value="entregues" className="w-full text-center leading-snug">
-              Pedidos entregues <Badge className="ml-2" variant="secondary">{deliveredOrders.length}</Badge>
+            <TabsTrigger value="entregues" className="relative w-full text-center leading-snug pr-10">
+              <span className="block">Pedidos entregues</span>
+              <Badge className="absolute right-2 top-1/2 -translate-y-1/2" variant="secondary">{deliveredOrders.length}</Badge>
             </TabsTrigger>
           </TabsList>
 
@@ -269,7 +304,7 @@ const Painel = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {orders.map((o) => (
-                  <Card key={o.id} className="flex flex-col">
+                  <Card key={o.id} className="flex flex-col cursor-pointer" onClick={() => navigate(`/pedido/${encodeURIComponent(o.id)}`)}>
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <div className="font-semibold">Pedido {o.codigo_pedido ?? "N/A"}</div>
@@ -287,7 +322,7 @@ const Painel = () => {
                       </div>
                       <div className="text-xs text-muted-foreground">{o.data_hora_pedido ? new Date(o.data_hora_pedido).toLocaleString("pt-BR") : "—"}</div>
                       <div className="pt-2">
-                        <Button className="w-full rounded-md" onClick={() => openDeliverModal(o)}>
+                        <Button className="w-full rounded-md" onClick={(e) => { e.stopPropagation(); openDeliverModal(o); }}>
                           Entregar
                         </Button>
                       </div>
@@ -448,6 +483,86 @@ const Painel = () => {
                 </DialogFooter>
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Detalhes do pedido com mini mapa e links de rota */}
+        <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+          <DialogContent className="w-[95vw] sm:max-w-2xl rounded-2xl p-6">
+            <DialogHeader>
+              <DialogTitle>Detalhes do Pedido</DialogTitle>
+              <DialogDescription>
+                Verifique itens, endereço e rota antes de sair.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground">Pedido</div>
+                  <div className="text-base font-medium">{detailsOrder?.codigo_pedido ?? detailsOrder?.id}</div>
+                  <div className="text-sm text-muted-foreground">Cliente</div>
+                  <div className="text-base">{detailsOrder?.nome_cliente ?? "—"}</div>
+                  <div className="text-sm text-muted-foreground">Endereço</div>
+                  <div className="text-base break-words">{detailsOrder?.endereco_completo ?? "—"}</div>
+                  <div className="flex gap-3 pt-2">
+                    {detailsOrder?.endereco_completo && (
+                      <>
+                        <a
+                          className="text-sm underline"
+                          target="_blank"
+                          href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent("Restaurante Karaíba, Uberlândia - MG")}&destination=${encodeURIComponent(detailsOrder.endereco_completo)}`}
+                          rel="noreferrer"
+                        >
+                          Abrir no Google Maps
+                        </a>
+                        <a
+                          className="text-sm underline"
+                          target="_blank"
+                          href={`https://waze.com/ul?q=${encodeURIComponent(detailsOrder.endereco_completo)}`}
+                          rel="noreferrer"
+                        >
+                          Abrir no Waze
+                        </a>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  {detailsOrder?.endereco_completo && (
+                    <MiniRouteMap destinationAddress={detailsOrder.endereco_completo} />
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">Forma de pagamento</div>
+                  <div className="text-base font-medium">{detailsOrder?.forma_pagamento ?? "—"}</div>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">Valor total</div>
+                  <div className="text-base font-medium">
+                    {(() => {
+                      const raw = detailsOrder?.valor_total as any;
+                      const n = typeof raw === 'number' ? raw : Number(String(raw ?? '').replace(',', '.'));
+                      return isNaN(n) ? 'R$ 0,00' : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    })()}
+                  </div>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">Status</div>
+                  <div className="text-base font-medium">{detailsOrder?.status ?? "—"}</div>
+                </div>
+              </div>
+
+              <div className="rounded-md border p-3">
+                <div className="text-sm font-medium mb-2">Itens do pedido</div>
+                <div className="text-sm whitespace-pre-wrap break-words">
+                  {detailsOrder?.itens || "—"}
+                </div>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

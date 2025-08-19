@@ -123,3 +123,11 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Correção de sobreposição do Leaflet em modais (z-index menor que o overlay) */
+.leaflet-pane, .leaflet-top, .leaflet-bottom {
+  z-index: 0 !important;
+}
+.leaflet-container {
+  z-index: 0 !important;
+}

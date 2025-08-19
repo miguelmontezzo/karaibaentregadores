@@ -8,6 +8,32 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      "/api/geocode": {
+        target: "https://geocode.maps.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/geocode/, "/search"),
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq, req) => {
+            try {
+              const url = new URL(proxyReq.path || "", "https://geocode.maps.co");
+              const params = url.searchParams;
+              // injeta api_key do ambiente se existir
+              const key = process.env.VITE_GEOCODE_API_KEY;
+              if (key && !params.get("api_key")) {
+                params.set("api_key", key);
+                proxyReq.path = url.pathname + "?" + params.toString();
+              }
+            } catch {}
+          });
+        },
+      },
+      "/api/nominatim": {
+        target: "https://nominatim.openstreetmap.org",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/nominatim/, "/search"),
+      },
+    },
   },
   plugins: [
     react(),
